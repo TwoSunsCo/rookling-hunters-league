@@ -8,13 +8,25 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">{{ team.name }}</h5>
+                    {% set total_kills = namespace(value=0) %}
+                    {% set members_kills = [] %}
+                    
+                    {% for member in team.members %}
+                        {% set member_kills = namespace(value=0) %}
+                        {% for kill in member.kills %}
+                            {% set member_kills.value = member_kills.value + kill.count %}
+                            {% set total_kills.value = total_kills.value + kill.count %}
+                        {% endfor %}
+                        {% set _ = members_kills.append((member, member_kills.value)) %}
+                    {% endfor %}
+                    
                     <p class="card-text">
-                        Total Kills: {{ team.members|sum(attribute='kills|sum(attribute="count")') }}
+                        Total Kills: {{ total_kills.value }}
                     </p>
                     <h6>Top Hunters:</h6>
                     <ul class="list-unstyled">
-                        {% for member in team.members|sort(attribute='kills|sum(attribute="count")', reverse=true)[:3] %}
-                        <li>{{ member.username }}: {{ member.kills|sum(attribute='count') }} kills</li>
+                        {% for member, kills in (members_kills|sort(reverse=true, attribute='1'))[:3] %}
+                            <li>{{ member.username }}: {{ kills }} kills</li>
                         {% endfor %}
                     </ul>
                 </div>
