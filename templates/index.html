@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+    <h1>Team Rankings</h1>
+    <div class="row">
+        {% for team in teams %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ team.name }}</h5>
+                    <p class="card-text">
+                        Total Kills: {{ team.members|sum(attribute='kills|sum(attribute="count")') }}
+                    </p>
+                    <h6>Top Hunters:</h6>
+                    <ul class="list-unstyled">
+                        {% for member in team.members|sort(attribute='kills|sum(attribute="count")', reverse=true)[:3] %}
+                        <li>{{ member.username }}: {{ member.kills|sum(attribute='count') }} kills</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}
