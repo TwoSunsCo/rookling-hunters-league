@@ -3,42 +3,20 @@ import {
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   User as FirebaseUser,
-  AuthError,
   onAuthStateChanged
 } from 'firebase/auth';
 import { auth } from '../../lib/firebase';
-import { createUser, deleteUserData } from './users';
+import { createUser } from './users';
 import type { Team } from '../../types';
 import { FirebaseError } from 'firebase/app';
-
-export class AuthError extends Error {
-  constructor(
-    message: string,
-    public readonly code: string,
-    public readonly originalError?: FirebaseError
-  ) {
-    super(message);
-    this.name = 'AuthError';
-  }
-}
+import { AuthError } from '../errors/AuthError';
+import { validateUser } from './validators';
 
 export class AuthService {
-  private static async validateUser(user: FirebaseUser): Promise<void> {
-    try {
-      await user.getIdToken(true);
-    } catch (error) {
-      throw new AuthError(
-        'Session expired. Please sign in again.',
-        'auth/invalid-token',
-        error as FirebaseError
-      );
-    }
-  }
-
   static async signIn(email: string, password: string): Promise<FirebaseUser> {
     try {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
-      await this.validateUser(user);
+      await validateUser(user);
       return user;
     } catch (error) {
       throw this.handleAuthError(error as FirebaseError);
@@ -67,7 +45,6 @@ export class AuthService {
       return user;
     } catch (error) {
       if (authUser) {
-        // Cleanup: If we created the auth user but failed to create the user document
         try {
           await authUser.delete();
         } catch (deleteError) {
@@ -98,7 +75,7 @@ export class AuthService {
           unsubscribe();
           if (user) {
             try {
-              await this.validateUser(user);
+              await validateUser(user);
               resolve(user);
             } catch (error) {
               resolve(null);
@@ -112,11 +89,11 @@ export class AuthService {
     });
   }
 
-  static onAuthStateChange(callback: (user: FirebaseUser | null) => void) {
+  static onAuthStateChange(callback: (user: FirebaseUser | null) => void): () => void {
     return onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-          await this.validateUser(user);
+          await validateUser(user);
           callback(user);
         } catch (error) {
           callback(null);
@@ -132,45 +109,4 @@ export class AuthService {
     
     switch (error.code) {
       case 'auth/email-already-in-use':
-        throw new AuthError('Email already registered', error.code, error);
-      
-      case 'auth/invalid-email':
-        throw new AuthError('Invalid email address', error.code, error);
-      
-      case 'auth/operation-not-allowed':
-        throw new AuthError('Account creation is currently disabled', error.code, error);
-      
-      case 'auth/weak-password':
-        throw new AuthError('Password must be at least 6 characters', error.code, error);
-      
-      case 'auth/user-not-found':
-      case 'auth/wrong-password':
-        // Combined error to avoid revealing which is incorrect
-        throw new AuthError('Invalid email or password', 'auth/invalid-credentials', error);
-      
-      case 'auth/too-many-requests':
-        throw new AuthError(
-          'Too many attempts. Please try again later',
-          error.code,
-          error
-        );
-      
-      case 'auth/network-request-failed':
-        throw new AuthError(
-          'Network error. Please check your connection.',
-          error.code,
-          error
-        );
-      
-      case 'auth/requires-recent-login':
-        throw new AuthError(
-          'Please sign in again to continue',
-          error.code,
-          error
-        );
-      
-      default:
-        throw new AuthError(baseErrorMessage, error.code || 'auth/unknown', error);
-    }
-  }
-}
+        throw
