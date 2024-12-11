@@ -1,12 +1,1 @@
-import { FirebaseError } from 'firebase/app';
-
-export class AuthError extends Error {
-  constructor(
-    message: string,
-    public readonly code: string,
-    public readonly originalError?: FirebaseError
-  ) {
-    super(message);
-    this.name = 'AuthError';
-  }
-}
+aW1wb3J0IHsgRmlyZWJhc2VFcnJvciB9IGZyb20gJ2ZpcmViYXNlL2FwcCc7CgpleHBvcnQgY2xhc3MgQXV0aEVycm9yIGV4dGVuZHMgRXJyb3IgewogIGNvbnN0cnVjdG9yKAogICAgbWVzc2FnZTogc3RyaW5nLAogICAgcHVibGljIHJlYWRvbmx5IGNvZGU6IHN0cmluZywKICAgIHB1YmxpYyByZWFkb25seSBvcmlnaW5hbEVycm9yPzogRmlyZWJhc2VFcnJvcgogICkgewogICAgc3VwZXIobWVzc2FnZSk7CiAgICB0aGlzLm5hbWUgPSAnQXV0aEVycm9yJzsKICB9Cn0=
